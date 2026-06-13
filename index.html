@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wolfsonian Accession Image Lookup &amp; Gallery Maker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --bg:       #000;
+      --surface:  #0f0f0f;
+      --surface2: #161616;
+      --border:   #2a2a2a;
+      --border2:  #333;
+      --text:     #f0f0f0;
+      --muted:    #888;
+      --accent:   #c8a96e;   /* warm gold — echoes the Wolfsonian's brand warmth */
+      --font:     'Plus Jakarta Sans', sans-serif;
+      --mono:     'DM Mono', monospace;
+    }
+
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font); }
+
+    /* ── Top nav bar ───────────────────────────────────────── */
+    .top-nav {
+      width: 100%;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .top-nav a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .top-nav a:hover { color: var(--text); }
+    .top-nav .nav-right { color: var(--muted); }
+
+    /* ── Page wrapper ──────────────────────────────────────── */
+    .page-wrap { max-width: 1200px; margin: 0 auto; padding: 40px 24px 60px; }
+
+    /* ── Hero header ───────────────────────────────────────── */
+    .hero { margin-bottom: 36px; }
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .hero-eyebrow::after {
+      content: '';
+      display: inline-block;
+      flex: 1;
+      height: 1px;
+      background: var(--border2);
+      max-width: 80px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 3px;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    .hero h1 {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 700;
+      line-height: 1.15;
+      margin: 0 0 10px;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .hero-desc {
+      font-size: 1rem;
+      font-weight: 300;
+      color: var(--muted);
+      max-width: 680px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* ── Info panels (About / How it works) ─────────────────── */
+    .info-panels { display: flex; flex-direction: column; gap: 2px; margin-bottom: 36px; }
+
+    .info-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .info-panel summary {
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text);
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .info-panel summary::-webkit-details-marker { display: none; }
+    .info-panel summary:hover { background: var(--surface2); }
+    .info-panel summary .chevron {
+      width: 16px; height: 16px;
+      transition: transform 0.25s ease;
+      opacity: 0.5;
+    }
+    .info-panel[open] summary .chevron { transform: rotate(180deg); }
+    .info-panel .panel-body {
+      padding: 0 18px 18px;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      color: #bbb;
+      border-top: 1px solid var(--border);
+    }
+    .info-panel .panel-body p { margin: 14px 0 0; }
+    .info-panel .panel-body p:first-child { margin-top: 14px; }
+    .info-panel .panel-body strong { color: var(--text); font-weight: 600; }
+    .info-panel .panel-body code {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      background: var(--surface2);
+      padding: 1px 6px;
+      border-radius: 3px;
+      border: 1px solid var(--border2);
+      color: var(--accent);
+    }
+
+    /* ── Tool section ──────────────────────────────────────── */
+    .tool-section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
+
+    /* ── Search fields ── */
+    .search-fields { display: flex; flex-direction: column; gap: 18px; margin-bottom: 18px; }
+    .search-field-group { display: flex; flex-direction: column; gap: 6px; }
+    .search-field-label {
+      font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--text);
+    }
+    .search-field-row { display: flex; gap: 16px; align-items: flex-start; }
+    .search-field-row textarea { flex: 1; min-width: 0; }
+    .search-text-input {
+      width: 100%; padding: 10px 12px; font-family: var(--mono); font-size: 0.85rem;
+      background: #0a0a0a; color: var(--muted); border: 1px solid var(--border2);
+      border-radius: 4px; outline: none; transition: border-color 0.2s;
+    }
+    .search-text-input:focus { border-color: #555; }
+    .date-range-row { display: flex; align-items: center; gap: 10px; }
+    .date-input { width: 200px; flex-shrink: 0; }
+    .date-range-sep { color: var(--muted); font-size: 0.82rem; white-space: nowrap; }
+    .search-mode-group {
+      display: flex; flex-direction: column; gap: 5px; flex-shrink: 0;
+      background: #0a0a0a; border: 1px solid var(--border2); border-radius: 4px;
+      padding: 8px 12px; min-width: 140px;
+    }
+    .mode-label {
+      font-family: var(--mono); font-size: 0.52rem; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #555; margin-bottom: 2px;
+    }
+    .mode-option {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.8rem; color: var(--muted); cursor: pointer;
+      white-space: nowrap;
+    }
+    .mode-option input[type=radio] { accent-color: var(--accent); cursor: pointer; }
+    .tool-section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin: 0 0 14px;
+    }
+
+    textarea {
+      width: 100%;
+      margin: 0 0 10px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border2);
+      border-radius: 5px;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+    textarea::placeholder { color: var(--muted); }
+    .search-text-input::placeholder { color: var(--muted); }
+    textarea:focus { outline: none; border-color: #555; }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin-bottom: 0;
+    }
+    button {
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      font-family: var(--font);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: #bbb;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    button:hover { background: #222; color: #fff; border-color: #555; }
+    button.btn-primary {
+      background: #1a1a1a;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    button.btn-primary:hover { background: #221e15; color: #dbb97e; }
+    button.btn-danger { border-color: #5a2020; color: #c06060; }
+    button.btn-danger:hover { background: #1f1010; color: #e08080; }
+
+    /* ── Results ───────────────────────────────────────────── */
+    #results { margin-top: 24px; overflow-x: auto; }
+
+    /* ── Expand toggle ── */
+    .expand-toggle {
+      display: block; width: 100%;
+      font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent); text-align: left;
+      background: none; border: 1px solid rgba(200,169,110,0.3);
+      border-radius: 3px; padding: 2px 5px; cursor: pointer;
+      margin-top: 5px; transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box;
+    }
+    .expand-toggle:hover { background: rgba(200,169,110,0.08); border-color: var(--accent); }
+    .expand-toggle .toggle-icon { font-size: 0.9rem; line-height: 1; transition: transform 0.2s; }
+    .expand-toggle.open .toggle-icon { transform: rotate(45deg); }
+
+    /* ── Sub-rows ── */
+    .sub-row { display: none; background: #0c0c0c !important; }
+    .sub-row.visible { display: table-row; }
+    .sub-row td { border-top: none !important; padding-top: 6px !important; padding-bottom: 6px !important; }
+    .sub-row-indent {
+      display: flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: 0.7rem; color: #555;
+    }
+    .sub-row-indent::before { content: '↳'; color: #444; flex-shrink: 0; }
+    .sub-row td:nth-child(3) { color: #555 !important; font-size: 0.78rem; }
+
+    /* Mobile sub-rows */
+    @media (max-width: 640px) {
+      .sub-row.visible {
+        display: grid !important;
+        margin-left: 12px;
+        border-left: 2px solid #333 !important;
+        border-radius: 0 4px 4px 0;
+        margin-bottom: 6px;
+      }
+      .expand-toggle { font-size: 0.6rem; }
+    }
+    .results-count {
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .select-all-bar {
+      padding: 8px 0 10px;
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+
+    table { border-collapse: collapse; width: 100%; table-layout: fixed; }
+    th, td { border: 1px solid var(--border); padding: 9px 10px; text-align: left; font-size: 0.85rem; word-break: break-word; color: #ccc; vertical-align: middle; }
+    td.col-desc { max-width: 340px; max-height: 90px; overflow-y: auto; font-size: 0.82rem; line-height: 1.55; }
+    th { background: #0f0f0f; color: var(--text); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+
+    /* Fixed column widths — prevents header text wrapping */
+    th:nth-child(1), td:nth-child(1) { width: 62px;  min-width: 62px;  text-align: center; }  /* Select */
+    th:nth-child(2), td:nth-child(2) { width: 52px;  min-width: 52px;  text-align: center; }  /* No. */
+    th:nth-child(3), td:nth-child(3) { width: 120px; min-width: 120px; }                       /* Accession */
+    th:nth-child(5), td:nth-child(5) { width: 160px; min-width: 120px; }                       /* Image Filename */
+    th:nth-child(7), td:nth-child(7) { width: 160px; min-width: 100px; }                       /* Title */
+    th:nth-child(8), td:nth-child(8) { width: 80px;  min-width: 70px;  }                       /* Date */
+    th:nth-child(9), td:nth-child(9) { width: 120px; min-width: 80px;  }                       /* Place */
+    th:nth-child(10), td:nth-child(10) { }                                                      /* Description — takes remaining space */
+    th:nth-child(11), td:nth-child(11) { width: 96px; min-width: 96px; text-align: center; }   /* Thumbnail */
+    tr:nth-child(even) td { background: #0d0d0d; }
+    tr:nth-child(odd)  td { background: #111; }
+    tr:hover td { background: #161616; }
+
+    .thumb-wrapper { position: relative; width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+    .thumb-wrapper .spinner { width: 20px; height: 20px; display: block !important; z-index: 1; }
+    .thumb-wrapper img.thumb { max-width: 80px; max-height: 80px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; display: none; }
+    .error img.thumb { display: none !important; }
+    .hidden-column { display: none; }
+    .digcat-icon { width: 20px; height: 20px; margin-left: 6px; vertical-align: middle; transition: transform 0.2s ease; opacity: 0.7; }
+    .digcat-icon:hover { transform: scale(1.2); opacity: 1; }
+
+    input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+
+    /* ── Modal ─────────────────────────────────────────────── */
+    #notFoundModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 9999; }
+    #notFoundModal .modal-content { background: var(--surface); border: 1px solid var(--border2); border-radius: 8px; width: 90%; max-width: 500px; padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.7); color: var(--text); }
+    #notFoundModal h3 { margin: 0 0 14px; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+    #notFoundList { width: 100%; height: 200px; resize: none; font-family: var(--mono); font-size: 0.85rem; padding: 10px; background: #0a0a0a; color: #ccc; border: 1px solid var(--border2); border-radius: 4px; }
+    /* ── Gallery name + link modals ── */
+    #galleryNameModal, #galleryLinkModal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 9999;
+    }
+    #galleryNameModal .modal-content, #galleryLinkModal .modal-content {
+      background: var(--surface); border: 1px solid var(--border2); border-radius: 8px;
+      width: 90%; max-width: 480px; padding: 28px; box-shadow: 0 8px 32px rgba(0,0,0,0.7); color: var(--text);
+    }
+    .modal-content h3 {
+      margin: 0 0 6px; font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    }
+    .modal-content p { font-size: 0.82rem; color: var(--muted); margin: 0 0 16px; line-height: 1.6; }
+    .modal-content input[type=text] {
+      width: 100%; padding: 10px 12px; font-family: var(--mono); font-size: 0.85rem;
+      background: #0a0a0a; color: var(--text); border: 1px solid var(--border2);
+      border-radius: 4px; margin-bottom: 18px; outline: none;
+    }
+    .modal-content input[type=text]:focus { border-color: var(--accent); }
+    .modal-link-row {
+      display: flex; gap: 8px; align-items: center; margin-bottom: 18px;
+    }
+    .modal-link-row input[type=text] {
+      flex: 1; margin-bottom: 0; color: var(--muted); cursor: default;
+    }
+    .modal-btn-row { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-btn {
+      font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 8px 18px; border-radius: 4px;
+      border: 1px solid var(--border2); background: transparent;
+      color: var(--text); cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    }
+    .modal-btn:hover { background: rgba(255,255,255,0.07); border-color: var(--muted); }
+    .modal-btn.primary { background: var(--accent); border-color: var(--accent); color: #000; }
+    .modal-btn.primary:hover { opacity: 0.85; }
+    .copy-confirm { font-size: 0.72rem; color: #5cb85c; margin-left: 6px; opacity: 0; transition: opacity 0.3s; }
+    .copy-confirm.show { opacity: 1; }
+    #closeModalBtn { margin-top: 12px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 4px; padding: 8px 16px; cursor: pointer; font-weight: 600; font-size: 0.82rem; color: var(--text); font-family: var(--font); width: auto; }
+    #closeModalBtn:hover { background: #222; }
+
+    /* ── Footer ────────────────────────────────────────────── */
+    .page-footer {
+      text-align: center;
+      margin-top: 48px;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #444;
+    }
+
+    .fancybox__toolbar .fancybox__counter { font-size: 0.9rem; padding-left: 6px; padding-right: 6px; }
+    /* ════════════════════════════════════════════════════════
+       RESPONSIVE — Desktop first, then tablet, then mobile
+       Breakpoints: tablet ≤ 1024px  |  mobile ≤ 640px
+    ════════════════════════════════════════════════════════ */
+
+    /* ── Tablet (≤ 1024px) ────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .page-wrap { padding: 28px 18px 48px; }
+      .hero h1 { font-size: clamp(1.4rem, 3.5vw, 2rem); }
+      .button-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 7px; }
+      td.col-desc { max-width: 220px; }
+    }
+
+    /* ── Mobile (≤ 640px) ─────────────────────────────────── */
+    @media (max-width: 640px) {
+
+      /* ── iOS Safari auto-zoom fix ──────────────────────────
+         Safari zooms in on any input/textarea with font-size < 16px.
+         Force 16px on mobile so the page stays at the correct scale. */
+      textarea,
+      input[type="text"],
+      input[type="search"],
+      input[type="email"],
+      select {
+        font-size: 16px !important;
+      }
+
+      /* Nav */
+      .top-nav { padding: 10px 14px; font-size: 0.68rem; gap: 8px; }
+      .top-nav .nav-right { display: none; }
+
+      /* Page */
+      .page-wrap { padding: 20px 14px 48px; }
+
+      /* Hero */
+      .hero { margin-bottom: 24px; }
+      .hero h1 { font-size: 1.35rem; }
+      .hero-desc { font-size: 0.88rem; }
+      .hero-eyebrow { font-size: 0.65rem; flex-wrap: wrap; }
+      .badge { font-size: 0.6rem; margin-left: 4px; }
+
+      /* Info panels */
+      .info-panel summary { font-size: 0.76rem; padding: 12px 14px; }
+      .info-panel .panel-body { font-size: 0.85rem; padding: 0 14px 14px; }
+
+      /* Tool section */
+      .tool-section { padding: 16px 14px; border-radius: 6px; }
+      textarea { font-size: 0.85rem; padding: 10px 12px; }
+
+      /* Search fields on mobile */
+      .search-field-row { flex-direction: column; }
+      .search-mode-group { flex-direction: row; flex-wrap: wrap; gap: 8px; min-width: 0; width: 100%; }
+      .date-range-row { flex-wrap: wrap; }
+      .date-input { width: 100%; }
+      .date-range-sep { display: none; }
+
+      /* Buttons — full width stack on mobile */
+      .button-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+      }
+      button { padding: 11px 10px; font-size: 0.78rem; white-space: normal; line-height: 1.3; }
+
+      /* Results count + select bar */
+      .results-count { font-size: 0.72rem; }
+      .select-all-bar { font-size: 0.82rem; }
+
+      /* ── Results table → card layout on mobile ── */
+      #results { overflow-x: visible; }
+
+      /* Hide table structure entirely; rebuild as cards via pseudo-elements */
+      table, thead, tbody, th, tr { display: block; width: 100%; }
+
+      /* Hide header row — labels come from data-label attributes */
+      thead tr { display: none; }
+
+      /* Each row becomes a card */
+      tbody tr {
+        background: #111 !important;
+        border: 1px solid var(--border2);
+        border-radius: 6px;
+        margin-bottom: 12px;
+        padding: 12px;
+        display: grid;
+        grid-template-columns: 72px 1fr;
+        grid-template-rows: auto;
+        gap: 0 12px;
+        position: relative;
+      }
+      tbody tr:nth-child(even) { background: #0d0d0d !important; }
+
+      /* All cells reset */
+      tbody td {
+        display: block;
+        border: none !important;
+        padding: 2px 0 !important;
+        font-size: 0.83rem;
+        background: transparent !important;
+        color: #ccc;
+        word-break: break-word;
+      }
+
+      /* Checkbox — top-right of card */
+      tbody td:nth-child(1) {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        grid-column: unset;
+        padding: 0 !important;
+      }
+
+      /* Row number — hidden on mobile */
+      tbody td:nth-child(2) { display: none; }
+
+      /* Accession — spans right column, bold */
+      tbody td:nth-child(3) {
+        grid-column: 2;
+        grid-row: 1;
+        font-family: var(--mono);
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--accent);
+        padding-right: 28px !important; /* room for checkbox */
+      }
+
+      /* Folder — hidden (hidden-column already hides it) */
+      tbody td:nth-child(4) { display: none !important; }
+
+      /* Image filename — right column row 2 */
+      tbody td:nth-child(5) {
+        grid-column: 2;
+        grid-row: 2;
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+
+      /* Full path — hidden */
+      tbody td:nth-child(6) { display: none !important; }
+
+      /* Title — right column row 3, prominent */
+      tbody td:nth-child(7) {
+        grid-column: 2;
+        grid-row: 3;
+        font-weight: 600;
+        color: var(--text);
+        font-size: 0.85rem;
+        padding-top: 4px !important;
+      }
+
+      /* Date — right column row 4 */
+      tbody td:nth-child(8) {
+        grid-column: 2;
+        grid-row: 4;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      tbody td:nth-child(8)::before {
+        content: 'Date: ';
+        color: #555;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      /* Place — right column row 5 */
+      tbody td:nth-child(9) {
+        grid-column: 2;
+        grid-row: 5;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      tbody td:nth-child(9)::before {
+        content: 'Place: ';
+        color: #555;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      /* Description — right column row 6, clipped */
+      tbody td.col-desc {
+        grid-column: 2;
+        grid-row: 6;
+        max-width: none;
+        max-height: 72px;
+        overflow-y: auto;
+        font-size: 0.78rem;
+        line-height: 1.5;
+        color: #999;
+        padding-top: 4px !important;
+      }
+
+      /* Thumbnail — left column, spans all rows */
+      tbody td:last-child {
+        grid-column: 1;
+        grid-row: 1 / 7;
+        padding: 0 !important;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 2px !important;
+      }
+      .thumb-wrapper {
+        width: 64px;
+        height: 64px;
+      }
+      .thumb-wrapper img.thumb {
+        max-width: 64px;
+        max-height: 64px;
+      }
+
+      /* Modals */
+      #galleryNameModal .modal-content,
+      #galleryLinkModal .modal-content,
+      #notFoundModal .modal-content {
+        padding: 20px 16px;
+        width: 95%;
+      }
+      .modal-link-row { flex-wrap: wrap; }
+      .modal-link-row input[type=text] { font-size: 0.72rem; }
+      .modal-btn-row { flex-wrap: wrap; gap: 8px; }
+      .modal-btn { font-size: 0.65rem; padding: 9px 14px; }
+
+      /* Footer */
+      .page-footer { font-size: 0.65rem; margin-top: 32px; }
+    }
+
+    /* ── Very small phones (≤ 390px) ─────────────────────── */
+    @media (max-width: 390px) {
+      .button-grid { grid-template-columns: 1fr; }
+      button { font-size: 0.82rem; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Top nav bar -->
+  <nav class="top-nav">
+    <a href="https://www.wolfsonian.org" target="_blank">The Wolfsonian–FIU</a>
+    <span class="nav-right">Collection Image Search &amp; Gallery Maker</span>
+  </nav>
+
+  <div class="page-wrap">
+
+    <!-- Hero -->
+    <header class="hero">
+      <p class="hero-eyebrow">Wolfsonian Digital Labs — Image Tools <span class="badge">Proof of Concept</span></p>
+      <h1>Collection Image Search &amp; Gallery Maker</h1>
+      <p class="hero-desc">Search the Wolfsonian image archive by description, date, or place of origin. Review thumbnails and metadata, then compile selections into a shareable gallery.</p>
+    </header>
+
+    <!-- Info panels -->
+    <div class="info-panels">
+      <details class="info-panel">
+        <summary>
+          About this project
+          <svg class="chevron" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </summary>
+        <div class="panel-body">
+          <p>This tool is a proof of concept for searching and retrieving digitized images from the Wolfsonian collection by descriptive content, date of creation, and geographic place of origin. It is part of an ongoing initiative within the Wolfsonian Digital Labs to build browser-based tools that connect staff and researchers to collection assets without requiring access to backend systems.</p>
+          <p>The search interface reads from an enriched image inventory CSV containing both image file paths and descriptive metadata exported from the Wolfsonian\'s collections system. Results can be reviewed as a thumbnail table, compiled into a shareable gallery, and exported as a print-ready PDF. As with all Digital Labs proofs of concept, formats, workflows, and features will continue to evolve.</p>
+        </div>
+      </details>
+
+      <details class="info-panel">
+        <summary>
+          How it works
+          <svg class="chevron" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </summary>
+        <div class="panel-body">
+          <p>On load, the tool fetches the enriched image inventory CSV, which maps each digitized image to its file path on network storage and includes descriptive metadata: title, object description, date created, and place of publication. All searching and filtering happens entirely in the browser with no server calls required.</p>
+          <p>Four search fields are available and can be used individually or in combination — results must match all filled fields simultaneously. <strong>Accession Number</strong> supports three modes: <strong>Exact</strong> matches one or more accession numbers precisely (space- or line-separated); <strong>Begins With</strong> returns all records whose accession starts with a given prefix, useful for retrieving an entire collection group; and <strong>Non-Exact</strong> performs a substring match for broader lookups. <strong>Description</strong> also supports three modes: <strong>Any Keyword</strong> returns results containing at least one of your terms; <strong>All Keywords</strong> requires every term to appear; and <strong>Exact Phrase</strong> matches your input verbatim within the description text. <strong>Place</strong> performs a partial match so entering a country, city, or region returns all records associated with that location. <strong>Date</strong> supports a single year or a range of years.</p>
+          <p>Results render as a table with thumbnails delivered via the Wolfsonian thumbnail service. Clicking any thumbnail opens a full-resolution lightbox powered by <strong>Fancybox</strong>. Selecting one or more results and clicking <strong>Create Gallery</strong> generates a named shareable gallery link. The <strong>Export Selected (PDF)</strong> function opens a print-ready view of the selected records.</p>
+        </div>
+      </details>
+
+      <details class="info-panel">
+        <summary>
+          How to create a gallery
+          <svg class="chevron" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </summary>
+        <div class="panel-body">
+          <p><strong>1. Run a search.</strong> Use the Description, Place, or Date fields — individually or in combination — to retrieve a set of results. Each result shows the primary image for that object. Objects with multiple images (such as obverse and reverse views of a medal) display a <strong>⊕ more images</strong> toggle beneath the accession number.</p>
+          <p><strong>2. Expand additional views if needed.</strong> Click the <strong>⊕</strong> toggle to reveal all images associated with an object. Each additional view has its own checkbox, thumbnail, and filename. You can include any combination of primary and expanded views in your gallery — for example, checking both the obverse and reverse of a medal will include both in the final output.</p>
+          <p><strong>3. Select your records.</strong> Use the individual checkboxes to select the images you want to include, or use <strong>Select / Deselect All</strong> to check everything currently visible. Only checked rows — whether primary or expanded — will be included in the gallery or export.</p>
+          <p><strong>4. Create the gallery.</strong> Click <strong>Create Gallery</strong>. A prompt will ask you to name the gallery — use a descriptive, hyphen- or underscore-separated name such as <em>Kreisman_Flight_Medals</em>. A shareable link will be generated. Once deployed to the public server, this link can be opened by anyone. In local development mode the link works on this machine only.</p>
+          <p><strong>5. Export as PDF.</strong> Click <strong>Export Selected (PDF)</strong> to open a print-ready view of your checked records, including thumbnails, accession numbers, titles, dates, places, and descriptions. Use your browser&rsquo;s <strong>Save as PDF</strong> option in the print dialog to download the file.</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- Tool -->
+    <div class="tool-section">
+      <p class="tool-section-label">Search the Collection</p>
+
+      <div class="search-fields">
+
+        <!-- Accession -->
+        <div class="search-field-group">
+          <label class="search-field-label" for="accInput">Accession Number</label>
+          <div class="search-field-row">
+            <textarea id="accInput" placeholder="e.g. 2022.7.823  83.1.34.1 (space- or line-separated)" rows="2"></textarea>
+            <div class="search-mode-group">
+              <label class="mode-label">Mode</label>
+              <label class="mode-option"><input type="radio" name="accMode" value="exact" checked /> Exact</label>
+              <label class="mode-option"><input type="radio" name="accMode" value="begins" /> Begins With</label>
+              <label class="mode-option"><input type="radio" name="accMode" value="partial" /> Non-Exact</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="search-field-group">
+          <label class="search-field-label" for="descInput">Description</label>
+          <div class="search-field-row">
+            <textarea id="descInput" placeholder="e.g. pelican nurse bronze medallion" rows="2"></textarea>
+            <div class="search-mode-group">
+              <label class="mode-label">Mode</label>
+              <label class="mode-option"><input type="radio" name="descMode" value="any" checked /> Any Keyword</label>
+              <label class="mode-option"><input type="radio" name="descMode" value="all" /> All Keywords</label>
+              <label class="mode-option"><input type="radio" name="descMode" value="phrase" /> Exact Phrase</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Place -->
+        <div class="search-field-group">
+          <label class="search-field-label" for="placeInput">Place of Origin</label>
+          <input type="text" id="placeInput" class="search-text-input" placeholder="e.g. Belgium, France, New York" />
+        </div>
+
+        <!-- Date -->
+        <div class="search-field-group">
+          <label class="search-field-label">Date Created</label>
+          <div class="date-range-row">
+            <input type="text" id="dateFromInput" class="search-text-input date-input" placeholder="Year (e.g. 1915)" maxlength="4" />
+            <span class="date-range-sep">to</span>
+            <input type="text" id="dateToInput" class="search-text-input date-input" placeholder="Year (optional)" maxlength="4" />
+          </div>
+        </div>
+
+      </div><!-- /.search-fields -->
+
+      <div class="button-grid">
+        <button class="btn-primary" onclick="runSearch()">Search</button>
+        <button class="btn-primary" onclick="createGallery()">Create Gallery</button>
+        <button onclick="exportSelected()">Export Selected (PDF)</button>
+        <button class="btn-danger" onclick="clearResults()">Clear Results</button>
+      </div>
+      <div id="results"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="page-footer">The Wolfsonian–Florida International University</footer>
+
+  </div><!-- /page-wrap -->
+
+  <!-- ── Gallery Name Modal ── -->
+  <div id="galleryNameModal">
+    <div class="modal-content">
+      <h3>Name This Gallery</h3>
+      <p>Give your selection a name. This will be used to generate a short shareable link.</p>
+      <input type="text" id="galleryNameInput" placeholder="e.g. Kreisman_Flight_Medals" maxlength="60" />
+      <div class="modal-btn-row">
+        <button class="modal-btn" onclick="document.getElementById('galleryNameModal').style.display='none'">Cancel</button>
+        <button class="modal-btn primary" onclick="confirmGalleryName()">Create Gallery &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Gallery Link Modal ── -->
+  <div id="galleryLinkModal">
+    <div class="modal-content">
+      <h3>Gallery Created</h3>
+      <p>Copy this link to share your gallery.</p>
+      <p id="galleryLinkNote" style="font-size:0.78rem;margin-bottom:10px;"></p>
+      <div class="modal-link-row">
+        <input type="text" id="galleryLinkDisplay" readonly />
+        <button class="modal-btn primary" onclick="copyGalleryLink()">Copy</button>
+        <span class="copy-confirm" id="copyConfirm">Copied!</span>
+      </div>
+      <div class="modal-btn-row">
+        <button class="modal-btn" onclick="document.getElementById('galleryLinkModal').style.display='none'">Close</button>
+        <button class="modal-btn primary" onclick="openGallery()">Open Gallery &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="notFoundModal">
+    <div class="modal-content">
+      <h3>Missing Accessions</h3>
+      <textarea id="notFoundList" readonly></textarea>
+      <br/>
+      <button id="closeModalBtn">Close</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script type="text/javascript" src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   CONFIGURATION — update these for each deployment environment.
+   All URLs may be absolute (https://…) or relative to this page.
+   No other part of the code should need to change between servers.
+════════════════════════════════════════════════════════════ */
+const CONFIG = {
+
+  // Enriched CSV file — image paths + descriptive metadata.
+  // Absolute URL works across domains; relative works when co-located.
+  // Example absolute: "https://labs.wolfsonian.org/Metadata/MasterImageList_Enriched.csv"
+  csvUrl: "../Metadata/MasterImageList_Enriched.csv",
+
+  // Wolfsonian thumbnail service — delivers resized JPEGs from network storage.
+  // No local image software (ImageMagick, etc.) is required; all processing
+  // happens server-side at this external URL.
+  thumbnailServiceUrl: "https://labs.wolfsonian.org/thumbnail-service/api/thumbnail",
+
+  // Thumbnail dimensions (pixels)
+  thumbWidth:  200,
+  thumbHeight: 200,
+
+  // Lightbox / full-resolution dimensions
+  fancyWidth:  1280,
+  fancyHeight: 1024,
+
+  // Path to the companion gallery viewer page.
+  // Relative to this tool, or supply an absolute URL.
+  galleryViewerPath: "gallery/index.html",
+
+  // Server endpoint that accepts POST { name, items } and persists a named gallery.
+  // Set to null to skip the server-side attempt and always use hash-URL fallback.
+  gallerySaveEndpoint: "/save-gallery",
+
+  // Base URL for Digital Catalog item links (appended with the Node value).
+  digitalCatalogUrl: "https://digital.wolfsonian.org/node/",
+
+};
+/* ════════════════════════════════════════════════════════════ */
+
+let csvData = [];
+let headers = [];
+let accessionHeader, folderHeader, imageHeader;
+let titleHeader, descHeader, fullPathHeader, dateHeader, placeHeader;
+let metaMap = {};   // keyed by lowercase accession → metadata row from MasterImageList_Enriched.xlsx
+
+function initializePage() {
+  document.getElementById('descInput').focus();
+  const storedResults = sessionStorage.getItem('searchResults');
+  const storedChecked = sessionStorage.getItem('checkedAccessions');
+
+  if (storedResults) {
+    const results = JSON.parse(storedResults);
+    renderResults(results);
+
+    if (storedChecked) {
+      const checkedAccessions = JSON.parse(storedChecked);
+      const rows = document.querySelectorAll('#results-table tbody tr');
+      rows.forEach(row => {
+        const accessionText = row.querySelector('td:nth-child(3)').textContent.trim();
+        if (checkedAccessions.includes(accessionText)) {
+          const checkbox = row.querySelector('.download-checkbox');
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        }
+      });
+    }
+
+    // Clear the stored data so it's not reloaded on a fresh visit
+    sessionStorage.removeItem('searchResults');
+    sessionStorage.removeItem('checkedAccessions');
+    sessionStorage.removeItem('galleryImagePaths');
+  }
+
+  // Load the enriched CSV — path/URL set in CONFIG.csvUrl above.
+  // Supports both relative paths (same server) and absolute URLs (cross-origin,
+  // requires the remote server to send appropriate CORS headers).
+  const masterFetch = fetch(CONFIG.csvUrl)
+    .then(r => {
+      console.log("MasterImageList_Enriched fetch:", r.status, r.url);
+      if (!r.ok) throw new Error(
+        `HTTP ${r.status} fetching the metadata CSV.\n` +
+        `URL tried: ${r.url}\n\n` +
+        `Common causes:\n` +
+        `  • File not at that path on the server\n` +
+        `  • Server not running (open index.html via http://, not file://)\n` +
+        `  • CORS policy blocking a cross-origin request — ` +
+        `the server at ${new URL(CONFIG.csvUrl, location.href).origin} must send ` +
+        `"Access-Control-Allow-Origin: *" (or your domain) for this to work across origins.`
+      );
+      return r.text();
+    })
+    .then(text => {
+      if (text.trim().startsWith("<")) throw new Error(
+        `The metadata CSV URL returned an HTML page instead of CSV data.\n` +
+        `URL: ${CONFIG.csvUrl}\n` +
+        `This usually means a redirect to a login page or a 404 error page.\n` +
+        `Check CONFIG.csvUrl and confirm the file is accessible without authentication.`
+      );
+      csvData = parseCSV(text);
+      headers = Object.keys(csvData[0] || {});
+
+      // Path columns
+      accessionHeader = headers.find(h => h.toLowerCase() === "accession") || null;
+      folderHeader    = headers.find(h => h.toLowerCase() === "folder")    || null;
+      imageHeader     = headers.find(h => h.toLowerCase() === "image")     || null;
+      console.log("MasterImageList_Enriched headers:", headers);
+      if (!accessionHeader) alert(`Warning: No 'Accession' column found.\nHeaders found: ${headers.join(", ")}`);
+
+      // Metadata columns
+      fullPathHeader = headers.find(h => h.toLowerCase() === "fullpath")           || null;
+      titleHeader    = headers.find(h => h === "Title")                              || null;
+      dateHeader     = headers.find(h => h === "Field_EDTF_Date_Created")            || null;
+      placeHeader    = headers.find(h => h === "Field_Place_Published")              || null;
+      descHeader     = headers.find(h => h === "Field_Description_Long")             || null;
+
+      // Build metadata lookup map keyed by lowercase accession
+      csvData.forEach(row => {
+        const key = (row[accessionHeader] || "").toLowerCase().trim();
+        if (key) metaMap[key] = row;
+      });
+      console.log("Metadata columns →", { fullPathHeader, titleHeader, dateHeader, placeHeader, descHeader });
+      console.log("Records loaded:", csvData.length, "| Metadata map:", Object.keys(metaMap).length, "entries");
+    });
+
+  Promise.resolve(masterFetch).catch(err => {
+    console.error("CSV load error:", err.message);
+    alert(`Failed to load metadata CSV.\n\nURL: ${CONFIG.csvUrl}\n\n${err.message}`);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", initializePage);
+
+window.addEventListener('pageshow', function(event) {
+  if (event.persisted) {
+    initializePage();
+  }
+});
+
+function parseCSV(text) {
+  // Strip UTF-8 BOM
+  text = text.replace(/^\uFEFF/, "");
+
+  // RFC-4180 compliant character-by-character parser.
+  // Handles: quoted fields, commas inside quotes, escaped quotes (""), multi-word text.
+  const rows = [];
+  let row = [];
+  let field = "";
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < text.length) {
+    const ch = text[i];
+
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') {
+          // Escaped double-quote inside a quoted field
+          field += '"';
+          i += 2;
+          continue;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        row.push(field.trim());
+        field = "";
+      } else if (ch === '\r' && text[i + 1] === '\n') {
+        // Windows line ending
+        row.push(field.trim());
+        if (row.some(f => f.length > 0)) rows.push(row);
+        row = []; field = "";
+        i += 2;
+        continue;
+      } else if (ch === '\n' || ch === '\r') {
+        row.push(field.trim());
+        if (row.some(f => f.length > 0)) rows.push(row);
+        row = []; field = "";
+      } else {
+        field += ch;
+      }
+    }
+    i++;
+  }
+  // Final field / row
+  if (field.length > 0 || row.length > 0) {
+    row.push(field.trim());
+    if (row.some(f => f.length > 0)) rows.push(row);
+  }
+
+  if (rows.length === 0) return [];
+
+  // First row is headers
+  const hdrs = rows[0].map(h => h.replace(/[^\x20-\x7E]/g, "").trim()).filter(h => h.length > 0);
+  const data = [];
+  for (let r = 1; r < rows.length; r++) {
+    const vals = rows[r];
+    if (vals.every(v => v === "")) continue;
+    const obj = {};
+    hdrs.forEach((h, idx) => { obj[h] = vals[idx] !== undefined ? vals[idx] : ""; });
+    data.push(obj);
+  }
+  return data;
+}
+
+function joinPath(folder, image) {
+  if (!folder) return image || "";
+  if (!image) return folder || "";
+  if (folder.endsWith("/") || folder.endsWith("\\")) return folder + image;
+  return folder + "/" + image;
+}
+
+/* thumbnail proxy — uses CONFIG.thumbnailServiceUrl; no local image software required */
+function getThumbnailUrl(fullPath) {
+  const normalizedPath = fullPath.replace(/\\/g, "/");
+  return `${CONFIG.thumbnailServiceUrl}?path=${encodeURIComponent(normalizedPath)}&width=${CONFIG.thumbWidth}&height=${CONFIG.thumbHeight}`;
+}
+
+/* large preview for lightbox */
+function getFancyUrl(fullPath) {
+  const normalizedPath = fullPath.replace(/\\/g, "/");
+  return `${CONFIG.thumbnailServiceUrl}?path=${encodeURIComponent(normalizedPath)}&width=${CONFIG.fancyWidth}&height=${CONFIG.fancyHeight}`;
+}
+
+let currentResults = [];
+
+function buildRow(r, index, isSubRow, groupId) {
+  const fullPath    = (fullPathHeader && r[fullPathHeader]) ? r[fullPathHeader] : joinPath(r[folderHeader], r[imageHeader]);
+  const thumbUrl    = getThumbnailUrl(fullPath);
+  const fancyUrl    = getFancyUrl(fullPath);
+  const nodeVal     = r["Node"];
+  const accessionText = (r[accessionHeader] || "").trim();
+  const meta        = metaMap[accessionText.toLowerCase()] || {};
+  const titleText   = (titleHeader  && meta[titleHeader])  ? meta[titleHeader]  : "";
+  const dateText    = (dateHeader   && meta[dateHeader])   ? meta[dateHeader]   : "";
+  const placeText   = (placeHeader  && meta[placeHeader])  ? meta[placeHeader]  : "";
+  const descText    = (descHeader   && meta[descHeader])   ? meta[descHeader]   : "";
+  const filename    = (r[imageHeader] || "").replace(/\.(tif|tiff)$/i, "");
+
+  // Digcat icon — same as original, digcaticon.png co-located on the server
+  const digcatImg = nodeVal
+    ? `<a href="${CONFIG.digitalCatalogUrl}${nodeVal}" target="_blank">
+        <img src="digcaticon.png" alt="Digital Catalog Icon" class="digcat-icon" /></a>`
+    : "";
+    titleText     ? `<strong>${titleText}</strong>`  : "",
+    accessionText ? `Accession: ${accessionText}`    : "",
+    dateText      ? `Date: ${dateText}`              : "",
+    placeText     ? `Place: ${placeText}`            : "",
+    descText      ? `${descText}`                    : ""
+  ].filter(Boolean).join("<br/>");
+
+  const rowClass   = isSubRow ? `sub-row" data-group="${groupId}` : "";
+  const noCell     = isSubRow ? `<td></td>` : `<td>${index + 1}</td>`;
+  const accCell    = isSubRow
+    ? `<td><div class="sub-row-indent">${filename}</div></td>`
+    : `<td>${accessionText} ${digcatImg}</td>`;
+  const metaCells  = isSubRow
+    ? `<td class="hidden-column"></td><td></td><td class="hidden-column">${fullPath}</td><td></td><td></td><td></td><td class="col-desc"></td>`
+    : `<td class="hidden-column">${r[folderHeader] || ""}</td>
+       <td>${filename}</td>
+       <td class="hidden-column">${fullPath}</td>
+       <td>${titleText}</td>
+       <td>${dateText}</td>
+       <td>${placeText}</td>
+       <td class="col-desc">${descText}</td>`;
+
+  return `<tr class="${rowClass}">
+    <td><input type="checkbox" class="download-checkbox" data-path="${fullPath}" /></td>
+    ${noCell}
+    ${accCell}
+    ${metaCells}
+    <td><a href="${fancyUrl}" data-fancybox="gallery" data-caption="${captionParts.replace(/"/g, '&quot;')}" data-download-src="${fancyUrl}" data-thumb="${thumbUrl}">
+      <div class="thumb-wrapper">
+        <img class="spinner" src="spinner.gif" alt="Loading..." />
+        <img class="thumb" data-src="${thumbUrl}" alt="Thumbnail" />
+      </div></a></td></tr>`;
+}
+
+function toggleSubRows(groupId, btn) {
+  const rows = document.querySelectorAll(`.sub-row[data-group="${groupId}"]`);
+  const isOpen = btn.classList.contains("open");
+  rows.forEach(r => r.classList.toggle("visible", !isOpen));
+  btn.classList.toggle("open", !isOpen);
+  btn.querySelector(".toggle-icon").textContent = isOpen ? "⊕" : "⊗";
+  const countEl = btn.querySelector(".toggle-count");
+  if (countEl) countEl.textContent = isOpen
+    ? `${rows.length} more image${rows.length > 1 ? "s" : ""}`
+    : "collapse";
+}
+
+function renderResults(results) {
+  if (results.length > 50) {
+    if (!window.confirm(`There are ${results.length} results. Do you want to continue?`)) return;
+  }
+
+  currentResults = results;
+
+  // Build a lookup of ALL csvData rows grouped by accession for sibling expansion
+  const allByAccession = {};
+  csvData.forEach(row => {
+    const acc = (row[accessionHeader] || "").toLowerCase().trim();
+    if (!acc) return;
+    if (!allByAccession[acc]) allByAccession[acc] = [];
+    allByAccession[acc].push(row);
+  });
+
+  const resultsContainer = document.getElementById("results");
+  resultsContainer.innerHTML = "";
+  let html = `<p class="results-count">${results.length} result${results.length > 1 ? "s" : ""} found</p>`;
+  html += `<div class="select-all-bar">
+             <label><input type="checkbox" id="selectAll" /> Select / Deselect All</label>
+           </div>
+           <table id="results-table">
+             <thead>
+               <tr>
+                 <th>Select</th><th>No.</th><th>Accession</th><th class="hidden-column">Folder</th>
+                 <th>Image Filename</th><th class="hidden-column">Full Path</th>
+                 <th>Title</th><th>Date</th><th>Place</th><th>Description</th>
+                 <th>Thumbnail</th>
+               </tr>
+             </thead><tbody>`;
+
+  results.forEach((r, index) => {
+    const accessionText = (r[accessionHeader] || "").trim();
+    const accKey        = accessionText.toLowerCase();
+    const siblings      = (allByAccession[accKey] || []).filter(s => {
+      const sp = (fullPathHeader && s[fullPathHeader]) ? s[fullPathHeader] : joinPath(s[folderHeader], s[imageHeader]);
+      const rp = (fullPathHeader && r[fullPathHeader]) ? r[fullPathHeader] : joinPath(r[folderHeader], r[imageHeader]);
+      return sp !== rp;
+    });
+    const groupId = "grp-" + accKey.replace(/[^a-z0-9]/g, "-") + "-" + index;
+
+    // Primary row — add expand toggle if siblings exist
+    let primaryRow = buildRow(r, index + 1, false, null);
+    if (siblings.length > 0) {
+      const label = `${siblings.length} more image${siblings.length > 1 ? "s" : ""}`;
+      const toggleBtn = `<button class="expand-toggle" onclick="toggleSubRows('${groupId}', this)">
+        <span class="toggle-icon">⊕</span>
+        <span class="toggle-count">${label}</span>
+      </button>`;
+      // Inject toggle into accession cell (3rd td)
+      primaryRow = primaryRow.replace(
+        `</td>
+    <td class="hidden-column">${r[folderHeader] || ""}`,
+        `${toggleBtn}</td>
+    <td class="hidden-column">${r[folderHeader] || ""}`
+      );
+    }
+    html += primaryRow;
+
+    // Sub-rows for each sibling image
+    siblings.forEach(sibling => {
+      html += buildRow(sibling, null, true, groupId);
+    });
+  });
+
+  html += "</tbody></table>";
+  resultsContainer.innerHTML = html;
+
+  document.getElementById("selectAll").addEventListener("change", e => {
+    document.querySelectorAll(".download-checkbox").forEach(cb => cb.checked = e.target.checked);
+  });
+
+  document.querySelectorAll(".thumb-wrapper img.thumb").forEach(img => {
+    const parent  = img.closest(".thumb-wrapper");
+    const spinner = parent.querySelector(".spinner");
+    img.onload  = () => { img.style.display = "block"; spinner.style.display = "none"; };
+    img.onerror = () => {
+      spinner.style.display = "none";
+      parent.classList.add("error");
+      const anchor = parent.closest("a[data-fancybox]");
+      if (anchor) { anchor.removeAttribute("href"); anchor.removeAttribute("data-fancybox"); }
+    };
+    img.src = img.dataset.src;
+  });
+  Fancybox.bind("[data-fancybox]", {});
+}
+
+function runSearch() {
+  sessionStorage.removeItem('searchResults');
+  sessionStorage.removeItem('checkedAccessions');
+  sessionStorage.removeItem('galleryImagePaths');
+
+  const descRaw  = (document.getElementById("descInput").value  || "").trim();
+  const placeRaw = (document.getElementById("placeInput").value || "").trim();
+  const dateFrom = (document.getElementById("dateFromInput").value || "").trim();
+  const dateTo   = (document.getElementById("dateToInput").value  || "").trim();
+  const mode     = document.querySelector('input[name="descMode"]:checked')?.value || "any";
+
+  const accRaw  = (document.getElementById("accInput").value  || "").trim();
+  const accMode  = document.querySelector('input[name="accMode"]:checked')?.value || "exact";
+  const accTerms = accRaw.split(/\s+/).map(a => a.trim().toLowerCase()).filter(Boolean);
+
+  if (!accRaw && !descRaw && !placeRaw && !dateFrom) {
+    return alert("Please enter at least one search term — accession number, description, place, or date.");
+  }
+
+  const results = csvData.filter(row => {
+    // ── Accession filter ────────────────────────────────────
+    if (accRaw) {
+      const acc = (row[accessionHeader] || "").toLowerCase().trim();
+      if (accMode === "exact") {
+        if (!accTerms.includes(acc)) return false;
+      } else if (accMode === "begins") {
+        if (!accTerms.some(t => acc.startsWith(t))) return false;
+      } else { // partial
+        if (!accTerms.some(t => acc.includes(t))) return false;
+      }
+    }
+
+    // ── Description filter ──────────────────────────────────
+    if (descRaw) {
+      const haystack = (row[descHeader] || "").toLowerCase();
+      const needle   = descRaw.toLowerCase();
+      if (mode === "phrase") {
+        if (!haystack.includes(needle)) return false;
+      } else {
+        const terms = needle.split(/\s+/).filter(Boolean);
+        if (mode === "all") {
+          if (!terms.every(t => haystack.includes(t))) return false;
+        } else { // "any"
+          if (!terms.some(t => haystack.includes(t)))  return false;
+        }
+      }
+    }
+
+    // ── Place filter ────────────────────────────────────────
+    if (placeRaw) {
+      const haystack = (row[placeHeader] || "").toLowerCase();
+      if (!haystack.includes(placeRaw.toLowerCase())) return false;
+    }
+
+    // ── Date filter ─────────────────────────────────────────
+    if (dateFrom) {
+      const rawDate = (row[dateHeader] || "").toLowerCase();
+      // Extract first 4-digit year found in the date field
+      const yearMatch = rawDate.match(/\d{4}/);
+      const year = yearMatch ? parseInt(yearMatch[0], 10) : null;
+      const from = parseInt(dateFrom, 10);
+      const to   = dateTo ? parseInt(dateTo, 10) : from;
+      if (!year || year < from || year > to) return false;
+    }
+
+    return true;
+  });
+
+  if (results.length === 0) {
+    document.getElementById("results").innerHTML =
+      '<p style="color:var(--muted);font-size:0.88rem;padding:16px 0;">No results found. Try broadening your search terms.</p>';
+    return;
+  }
+
+  // Deduplicate — keep only the first image per accession number (_000)
+  const seen = new Set();
+  const deduped = results.filter(row => {
+    const acc = (row[accessionHeader] || "").toLowerCase().trim();
+    if (!acc || seen.has(acc)) return false;
+    seen.add(acc);
+    return true;
+  });
+
+  renderResults(deduped);
+}
+
+// Allow Enter key to trigger search from any search input
+document.addEventListener("DOMContentLoaded", function() {
+  ["accInput","descInput","placeInput","dateFromInput","dateToInput"].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); runSearch(); }
+      });
+    }
+  });
+});
+
+function exportSelected() {
+  const checkedRows = document.querySelectorAll(".download-checkbox:checked");
+  if (checkedRows.length === 0) return alert("No images selected.");
+
+  // Collect row data and inline thumbnail src from the live DOM
+  const rowsHtml = Array.from(checkedRows).map(cb => {
+    const row       = cb.closest("tr");
+    const cells     = row.querySelectorAll("td");
+    const accession = cells[2] ? cells[2].textContent.trim() : "";
+    const filename  = cells[4] ? cells[4].textContent.trim() : "";
+    const title     = cells[6] ? cells[6].textContent.trim() : "";
+    const date      = cells[7] ? cells[7].textContent.trim() : "";
+    const place     = cells[8] ? cells[8].textContent.trim() : "";
+    const desc      = cells[9] ? cells[9].textContent.trim() : "";
+    const imgEl     = row.querySelector("img.thumb");
+    // Use the live src already loaded by the browser — no re-fetching needed
+    const thumbSrc  = (imgEl && imgEl.complete && imgEl.naturalWidth > 0) ? imgEl.src : "";
+
+    return `
+      <div class="record">
+        <div class="thumb-cell">
+          ${thumbSrc
+            ? `<img src="${thumbSrc}" alt="${accession}" />`
+            : `<div class="no-thumb">No image</div>`}
+        </div>
+        <div class="meta-cell">
+          <div class="meta-title">${title || "(Untitled)"}</div>
+          <div class="meta-line"><span class="meta-key">Accession</span>${accession}</div>
+          <div class="meta-line"><span class="meta-key">File</span>${filename}</div>
+          ${date  ? `<div class="meta-line"><span class="meta-key">Date</span>${date}</div>`   : ""}
+          ${place ? `<div class="meta-line"><span class="meta-key">Place</span>${place}</div>` : ""}
+          ${desc  ? `<div class="meta-desc">${desc}</div>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+
+  const printStyles = `
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Arial', sans-serif; font-size: 11px; color: #111; background: #fff; padding: 20px; }
+    h1 { font-size: 13px; font-weight: bold; margin-bottom: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .sub { font-size: 10px; color: #666; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #111; }
+    .record { display: flex; gap: 16px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #ddd; break-inside: avoid; }
+    .thumb-cell { flex-shrink: 0; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border: 1px solid #ddd; }
+    .thumb-cell img { max-width: 100px; max-height: 100px; object-fit: contain; display: block; }
+    .no-thumb { font-size: 9px; color: #aaa; text-align: center; padding: 8px; }
+    .meta-cell { flex: 1; padding-top: 4px; }
+    .meta-title { font-size: 12px; font-weight: bold; margin-bottom: 5px; line-height: 1.4; }
+    .meta-line { font-size: 10px; color: #444; margin-bottom: 3px; }
+    .meta-key { font-weight: bold; color: #111; margin-right: 6px; text-transform: uppercase; font-size: 9px; letter-spacing: 0.05em; }
+    .meta-desc { font-size: 10px; color: #555; margin-top: 6px; line-height: 1.5; }
+    @media print {
+      body { padding: 10px; }
+      .record { padding: 10px 0; }
+    }`;
+
+  const printWindow = window.open("", "_blank", "width=900,height=700");
+  printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Wolfsonian Selection</title>
+  <style>${printStyles}</style>
+</head>
+<body>
+  <h1>The Wolfsonian&ndash;FIU &mdash; Selected Collection Images</h1>
+  <div class="sub">${checkedRows.length} item${checkedRows.length !== 1 ? "s" : ""} selected &mdash; ${new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" })}</div>
+  ${rowsHtml}
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 800);
+    };
+  <\/script>
+</body>
+</html>`);
+  printWindow.document.close();
+}
+
+function clearResults() {
+  sessionStorage.removeItem('searchResults');
+  sessionStorage.removeItem('checkedAccessions');
+  sessionStorage.removeItem('galleryImagePaths');
+
+  document.getElementById("results").innerHTML = "";
+  ["accInput","descInput","placeInput","dateFromInput","dateToInput"].forEach(function(id){var el=document.getElementById(id);if(el)el.value="";});
+}
+
+// ── Gallery creation state ──
+let _pendingGalleryData = null;
+let _pendingGalleryUrl  = null;
+
+function createGallery() {
+  const checkboxes = document.querySelectorAll('.download-checkbox:checked');
+  if (checkboxes.length === 0) return alert('Please select at least one item.');
+
+  const selectedPaths   = [];
+  const checkedAccessions = [];
+  const galleryMetadata = [];
+
+  checkboxes.forEach(cb => {
+    const fullPath = cb.getAttribute('data-path');
+    if (fullPath) {
+      selectedPaths.push(fullPath);
+      const row = cb.closest('tr');
+      const accessionText = row.querySelector('td:nth-child(3)').textContent.trim();
+      checkedAccessions.push(accessionText);
+      const cells = row.querySelectorAll('td');
+      galleryMetadata.push({
+        accession: accessionText,
+        title:    cells[6] ? cells[6].textContent.trim() : "",
+        date:     cells[7] ? cells[7].textContent.trim() : "",
+        place:    cells[8] ? cells[8].textContent.trim() : "",
+        desc:     cells[9] ? cells[9].textContent.trim() : "",
+        path:     fullPath
+      });
+    }
+  });
+
+  if (selectedPaths.length === 0) return alert('No image paths found for selected items.');
+
+  // Store pending data and open naming modal
+  _pendingGalleryData = {
+    galleryMetadata,
+    selectedPaths,
+    checkedAccessions
+  };
+
+  // Pre-fill with a default name based on date
+  const today = new Date();
+  const defaultName = 'Gallery_' + today.getFullYear()
+    + String(today.getMonth()+1).padStart(2,'0')
+    + String(today.getDate()).padStart(2,'0');
+  document.getElementById('galleryNameInput').value = defaultName;
+  document.getElementById('galleryNameModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('galleryNameInput').select(), 100);
+}
+
+async function confirmGalleryName() {
+  let name = document.getElementById('galleryNameInput').value.trim();
+  if (!name) return alert('Please enter a gallery name.');
+
+  // Sanitize: replace spaces with underscores, strip unsafe chars
+  name = name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-]/g, '');
+  if (!name) return alert('Name contains no valid characters. Use letters, numbers, hyphens, or underscores.');
+
+  const { galleryMetadata, selectedPaths, checkedAccessions } = _pendingGalleryData;
+
+  // Always keep sessionStorage for immediate same-session navigation
+  sessionStorage.setItem('galleryImagePaths', selectedPaths.join('\n'));
+  sessionStorage.setItem('galleryMetadata', JSON.stringify(galleryMetadata));
+  sessionStorage.setItem('searchResults', JSON.stringify(currentResults));
+  sessionStorage.setItem('checkedAccessions', JSON.stringify(checkedAccessions));
+
+  const base = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+  let galleryUrl;
+  let isShortUrl = false;
+
+  // Attempt server-side save if CONFIG.gallerySaveEndpoint is set
+  if (CONFIG.gallerySaveEndpoint) {
+    try {
+      const resp = await fetch(CONFIG.gallerySaveEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, items: galleryMetadata })
+      });
+      if (resp.ok) {
+        galleryUrl = base + CONFIG.galleryViewerPath + '?gallery=' + encodeURIComponent(name);
+        isShortUrl = true;
+        console.log('Gallery saved server-side:', name);
+      } else {
+        throw new Error('Server returned ' + resp.status);
+      }
+    } catch(e) {
+      console.info('Server save not available, using hash URL fallback:', e.message);
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(galleryMetadata))));
+      galleryUrl = base + CONFIG.galleryViewerPath + '#' + encoded;
+      isShortUrl = false;
+    }
+  } else {
+    // gallerySaveEndpoint is null — skip server attempt, use hash URL directly
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(galleryMetadata))));
+    galleryUrl = base + CONFIG.galleryViewerPath + '#' + encoded;
+    isShortUrl = false;
+  }
+
+  _pendingGalleryUrl = galleryUrl;
+
+  // Update link modal note based on which URL type we got
+  const noteEl = document.getElementById('galleryLinkNote');
+  if (noteEl) {
+    noteEl.textContent = isShortUrl
+      ? 'This link works on any machine with access to this server.'
+      : 'Running in local dev mode — this link works on this machine only. Short shareable links will be available once deployed to labs.';
+    noteEl.style.color = isShortUrl ? '#5cb85c' : '#c8a96e';
+  }
+
+  // Close name modal, show link modal
+  document.getElementById('galleryNameModal').style.display = 'none';
+  document.getElementById('galleryLinkDisplay').value = galleryUrl;
+  document.getElementById('copyConfirm').classList.remove('show');
+  document.getElementById('galleryLinkModal').style.display = 'flex';
+}
+
+function copyGalleryLink() {
+  const input = document.getElementById('galleryLinkDisplay');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(() => {
+    const conf = document.getElementById('copyConfirm');
+    conf.classList.add('show');
+    setTimeout(() => conf.classList.remove('show'), 2000);
+  }).catch(() => {
+    document.execCommand('copy');
+  });
+}
+
+function openGallery() {
+  document.getElementById('galleryLinkModal').style.display = 'none';
+  window.location.href = _pendingGalleryUrl;
+}
+
+// Allow Enter key to confirm gallery name
+document.addEventListener('DOMContentLoaded', function() {
+  const nameInput = document.getElementById('galleryNameInput');
+  if (nameInput) {
+    nameInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') confirmGalleryName();
+      if (e.key === 'Escape') document.getElementById('galleryNameModal').style.display = 'none';
+    });
+  }
+});
+
+</script>
+</body>
+</html>
